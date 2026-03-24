@@ -132,6 +132,14 @@ input.fi:focus{border-color:var(--acc);}
 .tg input:checked+.ts{background:var(--acc);}
 .tg input:checked+.ts:before{transform:translateX(21px);}
 
+.flipped #sentCard{transform:rotateY(180deg);}
+#sentCard{position:relative;min-height:160px;transition:transform 0.4s;transform-style:preserve-3d;}
+@keyframes loopGlow{
+  0%{box-shadow:0 0 4px rgba(0,200,83,.3);border-color:rgba(0,200,83,.4);}
+  50%{box-shadow:0 0 18px rgba(0,200,83,.9),0 0 30px rgba(0,200,83,.4);border-color:rgba(0,200,83,1);}
+  100%{box-shadow:0 0 4px rgba(0,200,83,.3);border-color:rgba(0,200,83,.4);}
+}
+#loopBtn.on{animation:loopGlow 1.8s ease-in-out infinite;}
 #toast{position:fixed;bottom:calc(22px + env(safe-area-inset-bottom,0px));left:50%;transform:translateX(-50%) translateY(90px);background:var(--sur2);border:1px solid var(--brd);border-radius:99px;padding:10px 20px;font-size:13px;font-weight:800;white-space:nowrap;z-index:999;transition:transform .28s ease;}
 #toast.on{transform:translateX(-50%) translateY(0);}
 ::-webkit-scrollbar{width:3px;}
@@ -171,21 +179,44 @@ input.fi:focus{border-color:var(--acc);}
       <button class="ordBtn" id="ordEnRu" onclick="setOrder('en-ru')">&#127468;&#127463; EN&#8594;RU</button>
       <button class="ordBtn" id="ordRuOnly" onclick="setOrder('ru-only')">&#127479;&#127482; RU Only</button>
     </div>
-    <div id="sentCard">
-      <div id="sentTop">
-        <div>
-          <div id="sentNum">1 / 40</div>
-          <div id="sentBox" style="margin-top:2px;"></div>
+    <div style="width:100%;max-width:520px;display:flex;justify-content:flex-end;margin-bottom:6px;">
+      <button id="starBtn" onclick="toggleStar()" style="background:rgba(0,200,83,.08);border:2px solid rgba(0,200,83,.3);border-radius:99px;font-size:18px;cursor:pointer;color:#555;padding:7px 20px;font-weight:900;letter-spacing:1px;transition:all .2s;font-family:'Nunito',sans-serif;">&#10003;</button>
+    </div>
+    <div id="sentCardWrap" style="width:100%;max-width:520px;perspective:1000px;cursor:pointer;height:235px;position:relative;" onclick="flipCard()">
+      <div id="sentCard" style="position:absolute;inset:0;transition:transform 0.4s;transform-style:preserve-3d;width:100%;">
+        <!-- FRONT -->
+        <div id="cardFront" style="backface-visibility:hidden;-webkit-backface-visibility:hidden;background:var(--sur);border:1.5px solid var(--brd);border-radius:var(--rad);padding:14px 16px;position:absolute;inset:0;overflow:auto;display:flex;flex-direction:column;">
+          <div style="text-align:center;margin-bottom:10px;">
+            <span id="sentNum" style="font-size:12px;font-weight:900;color:#00c853;">1/40</span>
+            <span style="color:#333;margin:0 6px;">·</span>
+            <span id="sentBox" style="font-size:12px;font-weight:900;color:#00c853;"></span>
+          </div>
+          <div style="flex:1;display:flex;flex-direction:column;justify-content:center;">
+          <div id="sentFrontTxt" style="font-size:clamp(15px,4vw,20px);font-weight:800;color:#f5f5f0;line-height:1.5;text-align:center;margin-bottom:10px;">Loading...</div>
+          <div id="verbRow" style="display:flex;align-items:baseline;justify-content:center;gap:8px;padding-top:8px;border-top:1px solid var(--brd);">
+            <div id="verbWord" style="font-size:16px;font-weight:900;color:var(--gold);"></div>
+            <div id="verbEn" style="font-size:12px;color:#aaa;font-style:italic;"></div>
+          </div>
+          </div>
         </div>
-        <button id="starBtn" onclick="toggleStar()">&#9733;</button>
-      </div>
-      <div id="sentRU">Loading...</div>
-      <div id="sentEN"></div>
-      <div id="verbRow">
-        <div id="verbWord"></div>
-        <div id="verbEn"></div>
+        <!-- BACK -->
+        <div id="cardBack" style="backface-visibility:hidden;-webkit-backface-visibility:hidden;transform:rotateY(180deg);background:linear-gradient(145deg,#1a2a1a,#0d1a0d);border:1.5px solid rgba(0,200,83,.2);border-radius:var(--rad);padding:14px 16px;position:absolute;inset:0;overflow:auto;display:flex;flex-direction:column;">
+          <div style="text-align:center;margin-bottom:10px;">
+            <span style="font-size:12px;font-weight:900;color:#00c853;" id="sentNumBack"></span>
+            <span style="color:#333;margin:0 6px;">·</span>
+            <span style="font-size:12px;font-weight:900;color:#00c853;" id="sentBoxBack"></span>
+          </div>
+          <div style="flex:1;display:flex;flex-direction:column;justify-content:center;">
+          <div id="sentBackTxt" style="font-size:clamp(14px,3.5vw,18px);font-weight:800;color:#f5f5f0;line-height:1.6;text-align:center;margin-bottom:10px;"></div>
+          <div id="backVerbRow" style="display:flex;align-items:baseline;justify-content:center;gap:6px;padding-top:8px;border-top:1px solid rgba(0,200,83,.2);margin-top:4px;">
+            <div id="backVerbWord" style="font-size:14px;font-weight:900;color:var(--gold);"></div>
+            <div id="backVerbEn" style="font-size:11px;color:#aaa;font-style:italic;"></div>
+          </div>
+          </div>
+        </div>
       </div>
     </div>
+
     <button id="conjBtn" onclick="togConj()">&#128218; Show Verb Conjugations</button>
     <div id="conjPanel">
       <div id="conjTitle">&#128218; VERB CONJUGATIONS</div>
@@ -195,14 +226,16 @@ input.fi:focus{border-color:var(--acc);}
       <div id="playRow">
         <button id="prevBtn" onclick="doPrev()">&#9664; Prev</button>
         <button id="playBtn" onclick="togglePlay()">&#9654; Play</button>
+        <button id="stopBtn" onclick="doStop()" style="height:var(--tap);border-radius:var(--rad);border:1.5px solid rgba(255,61,87,.4);background:rgba(255,61,87,.12);color:#ff3d57;font-family:'Nunito',sans-serif;font-size:18px;font-weight:800;cursor:pointer;padding:0 16px;">&#9632;</button>
         <button id="nextBtn" onclick="doNext()">Next &#9654;</button>
       </div>
       <div id="studyRow">
         <button id="againBtn" onclick="doAgain()">&#10007; Again</button>
         <button id="gotItBtn" onclick="doGotIt()">&#10003; Got It</button>
       </div>
-      <div id="loopRow">
-        <button id="loopBtn" onclick="toggleLoop()">&#8635; Loop Starred</button>
+      <div id="loopRow" style="display:flex;gap:6px;align-items:center;">
+        <button id="loopBtn" onclick="toggleLoop()" style="flex:1;">&#8635; Loop &#10003;'d</button>
+        <div id="starCountBadge" style="min-width:32px;height:44px;border-radius:8px;background:rgba(255,215,0,.15);border:1.5px solid var(--gold);display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:900;color:var(--gold);padding:0 8px;">0</div>
         <div style="display:flex;gap:4px;">
           <button class="lc" onclick="setLoopN(2)">2x</button>
           <button class="lc on" onclick="setLoopN(3)">3x</button>
@@ -300,6 +333,12 @@ var playOrder='ru-en';
 var conjOpen=false;
 var playTimer=null;
 var editIdx=-1;
+var isFlipped=false;
+
+function flipCard(){
+  isFlipped=!isFlipped;
+  document.getElementById('sentCardWrap').classList.toggle('flipped',isFlipped);
+}
 
 var BOX_DAYS=[0,1,2,4,8,16];
 var COLORS=['#555','#4a90d9','#ffd700','#00d4aa','#ff6b35','#00c853'];
@@ -334,25 +373,82 @@ function init(){
   renderCard();
   updateSliders();
   renderBoxBadges();
+  updateStarCount();
+}
+
+function highlightVerbInEN(enText, verbEn){
+  // Highlight the English verb translation inside the English sentence
+  if(!verbEn||!enText)return enText;
+  // verbEn may be "to provide/ensure" — try each form
+  var forms=verbEn.replace(/^to /i,'').split('/');
+  var result=enText;
+  forms.forEach(function(form){
+    form=form.trim();
+    if(!form)return;
+    // Case insensitive match of verb form as word
+    var re=new RegExp('('+form.replace(/[.*+?^${}()|[\]\\]/g,'\\$&')+')','gi');
+    result=result.replace(re,'<span style="color:var(--gold);font-weight:900;text-decoration:underline;">$1</span>');
+  });
+  return result;
+}
+
+function updateStarCount(){
+  var count=cards.filter(function(c){return c.starred;}).length;
+  var badge=document.getElementById('starCountBadge');
+  if(badge)badge.textContent=count;
 }
 
 function renderCard(){
   var c=cards[ci];if(!c)return;
+  // Unflip on new card
+  document.getElementById('sentCardWrap').classList.remove('flipped');
+  isFlipped=false;
+  // Front shows first language based on order
+  var isEnFirst=playOrder==='en-ru';
+  var frontTxt=isEnFirst?c.en:c.ru;
+  var backTxt=isEnFirst?c.ru:c.en;
+  // Front
+  if(isEnFirst){
+    // Front=EN: highlight verb in English
+    document.getElementById('sentFrontTxt').innerHTML=highlightVerbInEN(frontTxt,c.verb_en);
+    // Back=RU: just text
+    document.getElementById('sentBackTxt').textContent=backTxt;
+    // Show verb on back (Russian side)
+    document.getElementById('backVerbWord').textContent=c.verb||'';
+    document.getElementById('backVerbEn').textContent=c.verb_en?'— '+c.verb_en:'';
+    document.getElementById('backVerbRow').style.display=c.verb?'flex':'none';
+  }else{
+    // Front=RU: just text
+    document.getElementById('sentFrontTxt').textContent=frontTxt;
+    // Back=EN: highlight verb
+    document.getElementById('sentBackTxt').innerHTML=highlightVerbInEN(backTxt,c.verb_en);
+    // No verb on back (EN side)
+    document.getElementById('backVerbRow').style.display='none';
+  }
+  // Verb on front (Russian side) - always show when front is RU
+  document.getElementById('verbWord').textContent=(!isEnFirst&&c.verb)?c.verb:'';
+  document.getElementById('verbEn').textContent=(!isEnFirst&&c.verb_en)?'— '+c.verb_en:'';
+  document.getElementById('verbRow').style.display=(!isEnFirst&&c.verb)?'flex':'none';
+  // Verb on back
+  document.getElementById('backVerbWord').textContent=c.verb||'';
+  document.getElementById('backVerbEn').textContent=c.verb_en?'— '+c.verb_en:'';
   document.getElementById('sentNum').textContent=(ci+1)+' / '+cards.length;
-  document.getElementById('sentRU').textContent=c.ru;
-  document.getElementById('sentEN').textContent=c.en;
-  document.getElementById('verbWord').textContent=c.verb||'';
-  document.getElementById('verbEn').textContent=c.verb_en?'— '+c.verb_en:'';
+  if(document.getElementById('sentNumBack'))document.getElementById('sentNumBack').textContent=(ci+1)+' / '+cards.length;
+  if(document.getElementById('sentBoxBack'))document.getElementById('sentBoxBack').textContent='Box '+c.box;
   document.getElementById('sentBox').textContent='Box '+c.box;
   document.getElementById('sentBox').style.color=COLORS[c.box]||'#555';
   var sb=document.getElementById('starBtn');
-  sb.classList.toggle('on',c.starred||false);
+  sb.style.background=(c.starred)?'rgba(0,200,83,.25)':'rgba(0,200,83,.08)';
+  sb.style.borderColor=(c.starred)?'rgba(0,200,83,1)':'rgba(0,200,83,.3)';
+  sb.style.color=(c.starred)?'#00c853':'#555';
+  sb.style.boxShadow=(c.starred)?'0 0 12px rgba(0,200,83,.5)':'none';
   var pct=Math.round((ci/(cards.length-1||1))*100);
   document.getElementById('progFill').style.width=pct+'%';
   document.getElementById('progTxt').textContent=(ci+1)+' / '+cards.length;
   document.getElementById('boxDisp').textContent='Box '+c.box;
   document.getElementById('boxDisp').style.color=COLORS[c.box]||'#555';
   renderBoxBadges();
+  updateStarCount();
   if(conjOpen)renderConj();
 }
 
@@ -387,7 +483,12 @@ function toggleStar(){
   var c=cards[ci];if(!c)return;
   c.starred=!c.starred;
   saveData();
-  document.getElementById('starBtn').classList.toggle('on',c.starred);
+  var sb=document.getElementById('starBtn');
+  sb.style.background=c.starred?'rgba(0,200,83,.25)':'rgba(0,200,83,.08)';
+  sb.style.borderColor=c.starred?'rgba(0,200,83,1)':'rgba(0,200,83,.3)';
+  sb.style.color=c.starred?'#00c853':'#555';
+  sb.style.boxShadow=c.starred?'0 0 12px rgba(0,200,83,.5)':'none';
+  updateStarCount();
   toast(c.starred?'⭐ Starred':'Unstarred');
 }
 
@@ -396,6 +497,7 @@ function setOrder(o){
   document.getElementById('ordRuEn').classList.toggle('on',o==='ru-en');
   document.getElementById('ordEnRu').classList.toggle('on',o==='en-ru');
   document.getElementById('ordRuOnly').classList.toggle('on',o==='ru-only');
+  renderCard();
 }
 
 function renderConj(){
@@ -436,18 +538,36 @@ function getSpd(){return parseFloat(document.getElementById('spdSlider').value);
 function getPauseInner(){return parseFloat(document.getElementById('pauseInner').value)*1000;}
 function getPauseOuter(){return parseFloat(document.getElementById('pauseOuter').value)*1000;}
 
+function showFront(){
+  isFlipped=false;
+  document.getElementById('sentCardWrap').classList.remove('flipped');
+}
+function showBack(){
+  isFlipped=true;
+  document.getElementById('sentCardWrap').classList.add('flipped');
+}
+
 function playCurrent(onDone){
   var c=cards[ci];if(!c)return;
   var spd=getSpd();var inner=getPauseInner();
   if(playOrder==='ru-only'){
+    showFront(); // front=RU
     speak(c.ru,'ru-RU',spd,function(){if(onDone)setTimeout(onDone,inner);});
   }else if(playOrder==='ru-en'){
+    showFront(); // front=RU first
     speak(c.ru,'ru-RU',spd,function(){
-      setTimeout(function(){speak(c.en,'en-US',spd,function(){if(onDone)setTimeout(onDone,inner);});},inner);
+      setTimeout(function(){
+        showBack(); // flip to EN
+        speak(c.en,'en-US',spd,function(){if(onDone)setTimeout(onDone,inner);});
+      },inner);
     });
   }else{
+    showFront(); // front=EN first
     speak(c.en,'en-US',spd,function(){
-      setTimeout(function(){speak(c.ru,'ru-RU',spd,function(){if(onDone)setTimeout(onDone,inner);});},inner);
+      setTimeout(function(){
+        showBack(); // flip to RU
+        speak(c.ru,'ru-RU',spd,function(){if(onDone)setTimeout(onDone,inner);});
+      },inner);
     });
   }
 }
@@ -468,6 +588,16 @@ function stopPlay(){
   if(playTimer)clearTimeout(playTimer);
   var btn=document.getElementById('playBtn');
   btn.textContent='▶ Play';btn.classList.remove('playing');
+}
+
+function doStop(){
+  // Immediately cancel speech - stops mid-sentence
+  speechSynthesis.cancel();
+  isPlaying=false;
+  if(playTimer)clearTimeout(playTimer);
+  var btn=document.getElementById('playBtn');
+  btn.textContent='▶ Play';btn.classList.remove('playing');
+  toast('⏹ Stopped');
 }
 
 function playNext(){
@@ -501,8 +631,8 @@ function toggleLoop(){
   if(!loopOn&&starred.length===0){toast('Star some sentences first!');return;}
   loopOn=!loopOn;loopRep=0;
   document.getElementById('loopBtn').classList.toggle('on',loopOn);
-  document.getElementById('loopBtn').textContent=loopOn?'⭐ Looping Starred':'⇄ Loop Starred';
-  toast(loopOn?'Loop ON — '+starred.length+' sentences':'Loop OFF');
+  document.getElementById('loopBtn').textContent=loopOn?'⇄ Loop ✓\'d':'⇄ Loop Starred';
+  toast(loopOn?'Loop ON — '+starred.length+" ✓'d":'Loop OFF');
 }
 
 function setLoopN(n){
